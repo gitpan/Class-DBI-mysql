@@ -30,7 +30,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.16';
+$VERSION = '0.17';
 
 =head2 set_up_table
 
@@ -57,12 +57,12 @@ __PACKAGE__->set_sql('desc', 'DESCRIBE %s');
 sub set_up_table {
   my $class = shift;
   my $table = shift;
-  my $ref = $class->db_Main->selectall_arrayref("DESCRIBE $table");
+  my $ref = $class->db_Main->selectall_arrayref("DESCRIBE $table", {Columns=>{}});
   my (@cols, $primary);
   foreach my $row (@$ref) {
-    my ($col) = $row->[0] =~ /(\w+)/;
+    my $col = $row->{'field'};
     push @cols, $col;
-    next unless ($row->[3] eq "PRI");
+    next unless defined $row->{'key'} && $row->{'key'} eq 'PRI';
     $class->_croak("$table has composite primary key") if $primary;
     $primary = $col;
   }

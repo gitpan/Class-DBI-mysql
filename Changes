@@ -1,5 +1,9 @@
 Revision history for Class::DBI::mysql.
 
+0.17  2003-08-13
+        - cope with new DESCRIBE TABLE output format in MySQL 4.1
+          [Ken Y Clark]
+
 0.16  2003-06-30
         - removed search_match() and initials() which should be
           implemented in any class that needs them.
