@@ -1,5 +1,10 @@
 Revision history for Class::DBI::mysql.
 
+0.09  2001-10-05
+        - tweaks to commit() to cope with overloaded values
+          (temporary measure until this gets rolled into Ima::DBI)
+        [commit() still doesn't work with the latest Class::DBI features]
+
 0.08  2001-07-18
         - 'initials' method had problem with DISTINCT and ORDER BY in
            older MySQLs. Changed how it was implemented.

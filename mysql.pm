@@ -33,7 +33,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 use constant TRUE       => (1==1);
 use constant FALSE      => !TRUE;
@@ -275,20 +275,27 @@ WHERE  %s = ?
 
 sub commit {
   my $self = shift;
-
   if( my @changed_cols = $self->is_changed ) {
     my($primary_col) = $self->columns('Primary');
-    eval {
-      my (@cols, @vals, @magic);
-      foreach (@changed_cols) {
-        if ($self->{$_} eq "CURDATE()" or $self->{$_} eq "CURTIME()" or $self->{$_} eq "NOW()") {
-          push @cols, "$_ = $self->{$_}";
-          delete $self->{$_}; # so we reload it fresh next time.
-          next;
-        } 
-        push @cols, "$_ = ?";
-        push @vals, $self->{$_};
+    my (@cols, @vals, @magic);
+    foreach (@changed_cols) {
+      if (ref($self->{$_}) ne '') {
+        if (overload::Method($self->{$_},q{""})) {
+          $self->{$_} = "$self->{$_}";
+        } else {
+          die "$_ is a reference\n";
+        }
       }
+      if ($self->{$_} eq "CURDATE()" or $self->{$_} eq "CURTIME()" or
+           $self->{$_} eq "NOW()") {
+        push @cols, "$_ = $self->{$_}";
+        delete $self->{$_}; # so we reload it fresh next time.
+        next;
+      }
+      push @cols, "$_ = ?";
+      push @vals, $self->{$_};
+    }
+    eval {
       my $set = join( ', ', @cols);
       my $sth = $self->sql_commitall($self->table, $set, $primary_col);
       $sth->execute(@vals, $self->id );
