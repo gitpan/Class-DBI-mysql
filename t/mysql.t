@@ -31,7 +31,7 @@ __PACKAGE__->create_table(q{
 	id     MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	Name   VARCHAR(50)        NOT NULL DEFAULT '',
 	val    SMALLINT UNSIGNED  NOT NULL DEFAULT 'A',
-	mydate TIMESTAMP          NOT NULL DEFAULT '',
+	mydate TIMESTAMP          NOT NULL,
 	Myvals ENUM('foo', 'bar')
 });
 __PACKAGE__->set_up_table;

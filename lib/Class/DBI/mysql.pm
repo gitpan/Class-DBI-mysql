@@ -1,6 +1,6 @@
 package Class::DBI::mysql;
 
-$VERSION = '0.22';
+$VERSION = '0.23';
 
 =head1 NAME
 
@@ -213,7 +213,7 @@ sub count {
 
 =head1 COPYRIGHT
 
-Copyright (C) 2001-2003 Tony Bowden. All rights reserved.
+Copyright (C) 2001-2004 Tony Bowden. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

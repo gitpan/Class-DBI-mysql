@@ -1,5 +1,9 @@
 Revision history for Class::DBI::mysql.
 
+0.23  2004-02-28
+	- Tweak SQL for test table to cope with stricter checks in later MySQL
+	  versions (thanks to CPAN Testers)
+
 0.22  2003-10-26
 	- Add 'autoinflate' method.
 
