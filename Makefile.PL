@@ -6,6 +6,7 @@ WriteMakefile(
     'PREREQ_PM'		=> { 
       'Class::DBI' => 0.91, 
       'Test::More' => 0.45, 
+      'DBD::mysql' => 0, 
     },
     ($] >= 5.005 ?    
       (ABSTRACT_FROM => 'lib/Class/DBI/mysql.pm', 
