@@ -1,5 +1,11 @@
 Revision history for Class::DBI::mysql.
 
+0.06  2001-07-08
+        - reversed order of set-up in set_up_table to specify PRIMARY
+          before ALL, to avoid bug in inheritance where it would add
+          PRIMARY to ALL, even if you were just about to change PRIMARY.
+        - fixed bug with those tighter restrictions!
+
 0.05  2001-07-07
         - introduced tighter restrictions on tests for ORDER BY RAND
           and FULLTEXT searching, which weren't implemented until 3.23.02

@@ -124,7 +124,7 @@ sub get_mysql_version {
     SHOW VARIABLES
   })};
   my @version = split /\./, $var{version};
-  return sprintf "%01d%02d%03d", @version[0..2];
+  return sprintf "%01d%02d%02d", @version[0..2];
 }
 
 # Clean up after ourselves.

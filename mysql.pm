@@ -8,7 +8,7 @@ Class::DBI::mysql - Extensions to Class::DBI for MySQL
 
   package Film.pm;
   use base 'Class::DBI::mysql';
-  __PACKAGE__->set_db('Main', 'dbi:mysql', 'user', 'password');
+  __PACKAGE__->set_db('Main', 'dbi:mysql:dbname', 'user', 'password');
   __PACKAGE__->set_up_table("film");
 
   # Somewhere else ...
@@ -32,7 +32,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 use constant TRUE       => (1==1);
 use constant FALSE      => !TRUE;
@@ -76,8 +76,8 @@ sub set_up_table {
   }
   _die "$table has no primary key" unless $primary;
   $class->table($table);
-  $class->columns(All => @cols);
   $class->columns(Primary => $primary);
+  $class->columns(All => @cols);
 }
 
 =head2 count
