@@ -33,7 +33,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 sub _die { require Carp; Carp::croak(@_); } 
 
@@ -74,6 +74,24 @@ sub set_up_table {
   $class->table($table);
   $class->columns(Primary => $primary);
   $class->columns(All => @cols);
+}
+
+=head1 column_type
+
+  my $type = $class->column_type('column_name');
+
+This returns the 'type' of this table (VARCHAR(20), BIGINT, etc.)
+
+=cut
+
+sub column_type {
+  my $ref = shift;
+  my $class = ref($ref) || $ref;
+  my $col = shift or die "Need a column for column_type";
+  my $sth = $class->sql_desc($class->table);
+     $sth->execute;
+  my($series) = grep $_->[0] eq $col, $sth->fetchall;
+  return $series->[1];
 }
 
 =head1 enum_vals

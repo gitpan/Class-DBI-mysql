@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Test::More tests => 11;
+use Test::More tests => 12;
 use Class::DBI::mysql;
 
 #-------------------------------------------------------------------------
@@ -102,8 +102,11 @@ if ($version >= $FULLTEXT) {
 }
 
 #-------------------------------------------------------------------------
-# Test initials
+# Test coltype
 #-------------------------------------------------------------------------
+my $type = Foo->column_type('myvals');
+like $type, qr/^enum/i, "Myvals is an enum";
+
 my @vals = sort Foo->enum_vals('myvals');
 ok eq_array(\@vals, [qw/bar foo/]), "Enum vals OK";
 eval { Foo->enum_vals('mydate') };
