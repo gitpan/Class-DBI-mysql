@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Test::More tests => 12;
+use Test::More tests => 8;
 use Class::DBI::mysql;
 
 #-------------------------------------------------------------------------
@@ -78,29 +78,6 @@ if ($version >= $RANDORDER) {
   ok(1, "SKIPPED: ORDER BY rand introduced in 3.23.2");
 }
 
-# Test setting with CURDATE(). We can't sensibly validate that the
-# date/time set is accurate, as the clock on the database server
-# may be wildly different from the clock on the local machine,
-# but at least we can test that it's set to *something*. 
-
-my $one = $all[0];
-my $id  = $one->id;
-   $one->mydate("0000-00-00") and $one->commit;
-is($one->mydate, "0000-00-00", "Date is blank");
-   $one->mydate("CURDATE()") and $one->commit;
-ok($one->mydate ne "0000-00-00" && index($one->mydate,"-") > -1,
-     "Date is no longer blank (object):" . $one->mydate);
-   $one = Foo->retrieve($id);
-ok($one->mydate ne "0000-00-00" && index($one->mydate,"-") > -1,
-     "Date is no longer blank (database):" . $one->mydate);
-
-if ($version >= $FULLTEXT) {
-  my @tony = Foo->search_match(name => "MySQL");
-  ok(@tony == 2, "Search match OK");
-} else {
-  ok(1, "Skipping search match (needs 3.23 or higher)");
-}
-
 #-------------------------------------------------------------------------
 # Test coltype
 #-------------------------------------------------------------------------
@@ -140,7 +117,8 @@ sub get_mysql_version {
   my %var = map { $_->[0] => $_->[1] } @{ $dbh->selectall_arrayref(qq{
     SHOW VARIABLES
   })};
-  my @version = split /\./, $var{version};
+	my ($num) = split /-/, $var{version};
+  my @version = split /\./, $num;
   return sprintf "%01d%02d%02d", @version[0..2];
 }
 

@@ -1,5 +1,10 @@
 Revision history for Class::DBI::mysql.
 
+0.14  2003-03-28
+        - brought in line with Class::DBI 0.91
+        - no longer support CURDATE() etc. Much easier to implement
+          things like this in Class::DBI itself now.
+
 0.13  2002-03-09
         - untaint the column names in set_up_table
 

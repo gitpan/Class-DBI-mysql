@@ -32,7 +32,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 sub _die { require Carp; Carp::croak(@_); } 
 
@@ -211,8 +211,8 @@ sub initials {
     my($proto, $key) = @_;
     _die "You must fetch the initials of some value" unless $key;
     my($class) = ref $proto || $proto;
-    $class->normalize_one(\$key);
-    _die "$key is not a column" unless ($class->is_column($key));
+    $class->_normalize_one(\$key);
+    _die "$key is not a column" unless ($class->has_column($key));
     my $sth;
     eval {
         $sth = $class->sql_GetInits($key, $class->table);
@@ -225,51 +225,9 @@ sub initials {
     return map $_->[0], @{$sth->fetchall_arrayref};
 } 
 
-=head1 CURDATE() / CURTIME() / NOW()
-
-Due to the way in which placeholders work under DBI, it's currently very
-difficult to translate a query like the following to Class::DBI
-
-  UPDATE foo
-     SET flibble = "bar", since = CURDATE()
-
-Rather than having to convert all your columns to timestamps, this module
-allows you to specify CURDATE(), CURTIME() or NOW() as values:
-  
-  $foo->flibble("bar") and $foo->since("CURDATE()") and $foo->commit;
-
-CAVEAT: Note that until you've called 'commit', the value of this
-field will be set to this B<string>, and not the translation of it. For
-objects which are going to make use of this feature, consider turning
-autocommit on.
-
-=cut
-
-__PACKAGE__->set_sql('commitall', <<"", 'Main');
-UPDATE %s
-SET    %s
-WHERE  %s = ?
-
-{
-  my @magic = qw/CURDATE() CURTIME() NOW()/;
-  my %magic = map { $_ => 1 } @magic;
-
-  sub _commit_line {
-    my $self = shift;
-    join ", ", map { 
-      $magic{$self->{$_}} ? "$_ = $self->{$_}" : "$_ = ?";
-    } $self->is_changed;
-  }
-
-  sub _commit_vals {
-    my $self = shift;
-    map { $magic{$self->{$_}} ? () : $self->{$_} } $self->is_changed;
-  }
-}
-
 =head1 COPYRIGHT
 
-Copyright (C) 2001 Tony Bowden. All rights reserved.
+Copyright (C) 2001-2003 Tony Bowden. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
