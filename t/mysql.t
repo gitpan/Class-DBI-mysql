@@ -22,35 +22,39 @@ my $tbl  = $ENV{DBD_MYSQL_TABLE}  || 'tbcdbitest';
 __PACKAGE__->set_db(Main => "dbi:mysql:$db", $user => $pass);
 __PACKAGE__->drop_table;
 __PACKAGE__->create_table;
-END { __PACKAGE__->drop_table };
+END { __PACKAGE__->drop_table }
 __PACKAGE__->set_up_table($tbl);
 
-sub drop_table { 
+sub drop_table {
 	my $class = shift;
 	$class->db_Main->do("DROP TABLE IF EXISTS $tbl");
 }
 
-sub create_table { 
+sub create_table {
 	my $class = shift;
-	my $dbh = $class->db_Main;
-	$dbh->do(qq{
+	my $dbh   = $class->db_Main;
+	$dbh->do(
+		qq{
     CREATE TABLE $tbl (
       id mediumint not null auto_increment primary key,
-      name varchar(50) not null default '',
+      Name varchar(50) not null default '',
       val  smallint unsigned default 'A' not null,
       mydate date default '' not null,
-      myvals enum('foo', 'bar')
+      Myvals enum('foo', 'bar')
     )
-  });
+  }
+	);
 
-	$dbh->do(qq{
+	$dbh->do(
+		qq{
 		INSERT INTO $tbl (name) VALUES
 		('MySQL has now support'), ( 'for full-text search'),
 		('Full-text indexes'), ( 'are called collections'),
 		('Only MyISAM tables'), ('support collections'),
 		('Function MATCH ... AGAINST()'), ('is used to do a search'),
 		('Full-text search in MySQL'), ( 'implements vector space model')
-	});
+	}
+	);
 }
 
 #-------------------------------------------------------------------------
@@ -65,7 +69,7 @@ ok(Foo->can('name'), "We're set up OK");
 }
 
 my @all = Foo->retrieve_all;
-is(scalar @all, 10,  "And 10 results from retrieve_all()");
+is(scalar @all, 10, "And 10 results from retrieve_all()");
 
 # Test random. Is there a sensible way to test this is actually
 # random? For now we'll just ensure that we get something back.
@@ -73,10 +77,10 @@ my $obj = Foo->retrieve_random;
 isa_ok $obj => "Foo", "Retrieve a random row";
 
 # Test coltype
-my $type = Foo->column_type('myvals');
+my $type = Foo->column_type('Myvals');
 like $type, qr/^enum/i, "Myvals is an enum";
 
-my @vals = sort Foo->enum_vals('myvals');
+my @vals = sort Foo->enum_vals('Myvals');
 ok eq_array(\@vals, [qw/bar foo/]), "Enum vals OK";
 eval { Foo->enum_vals('mydate') };
 ok $@, $@;

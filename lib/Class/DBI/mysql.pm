@@ -30,7 +30,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.17';
+$VERSION = '0.19';
 
 =head2 set_up_table
 
@@ -52,24 +52,21 @@ no primary key, or has a composite primary key.
 
 =cut
 
-__PACKAGE__->set_sql('desc', 'DESCRIBE %s');
+__PACKAGE__->set_sql(desc_table => 'DESCRIBE __TABLE__');
 
 sub set_up_table {
-  my $class = shift;
-  my $table = shift;
-  my $ref = $class->db_Main->selectall_arrayref("DESCRIBE $table", {Columns=>{}});
-  my (@cols, $primary);
-  foreach my $row (@$ref) {
-    my $col = $row->{'field'};
-    push @cols, $col;
-    next unless defined $row->{'key'} && $row->{'key'} eq 'PRI';
-    $class->_croak("$table has composite primary key") if $primary;
-    $primary = $col;
-  }
-  $class->_croak("$table has no primary key") unless $primary;
-  $class->table($table);
-  $class->columns(Primary => $primary);
-  $class->columns(All => @cols);
+	my $class = shift;
+	$class->table(my $table = shift || $class->table);
+	(my $sth = $class->sql_desc_table)->execute;
+	my (@cols, @pri);
+	while (my $hash = $sth->fetch_hash) {
+		my ($col) = $hash->{field} =~ /(\w+)/;
+		push @cols, $col;
+		push @pri, $col if $hash->{key} eq "PRI";
+	}
+	$class->_croak("$table has no primary key") unless @pri;
+	$class->columns(Primary => @pri);
+	$class->columns(All     => @cols);
 }
 
 =head1 column_type
@@ -81,13 +78,12 @@ This returns the 'type' of this table (VARCHAR(20), BIGINT, etc.)
 =cut
 
 sub column_type {
-  my $ref = shift;
-  my $class = ref($ref) || $ref;
-  my $col = shift or die "Need a column for column_type";
-  my $sth = $class->sql_desc($class->table);
-     $sth->execute;
-  my($series) = grep $_->[0] eq $col, $sth->fetchall;
-  return $series->[1];
+	my $ref   = shift;
+	my $class = ref($ref) || $ref;
+	my $col   = shift or die "Need a column for column_type";
+	(my $sth = $class->sql_desc_table)->execute;
+	my ($series) = grep $_->[0] eq $col, $sth->fetchall;
+	return $series->[1];
 }
 
 =head1 enum_vals
@@ -99,15 +95,14 @@ This returns a list of the allowable values for an ENUM column.
 =cut
 
 sub enum_vals {
-  my $ref = shift;
-  my $class = ref($ref) || $ref;
-  my $col = shift or die "Need a column for enum vals";
-  my $sth = $class->sql_desc($class->table);
-     $sth->execute;
-  my($series) = grep $_->[0] eq $col, $sth->fetchall;
-  $series->[1] =~ /enum\((.*?)\)/ or die "$col is not an ENUM column";
-  (my $enum = $1) =~ s/'//g;
-  return split /,/, $enum;
+	my $ref   = shift;
+	my $class = ref($ref) || $ref;
+	my $col   = shift or die "Need a column for enum vals";
+	(my $sth = $class->sql_desc_table)->execute;
+	my ($series) = grep $_->[0] eq $col, $sth->fetchall;
+	$series->[1] =~ /enum\((.*?)\)/ or die "$col is not an ENUM column";
+	(my $enum = $1) =~ s/'//g;
+	return split /,/, $enum;
 }
 
 =head2 retrieve_random

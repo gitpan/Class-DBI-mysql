@@ -1,5 +1,9 @@
 Revision history for Class::DBI::mysql.
 
+0.18  2003-09-28
+        - Cope with various DESCRIBE TABLE outputs, hopefully.
+        - Bring back the untainting that had vanished (Kingsley Kerce)
+
 0.17  2003-08-13
         - cope with new DESCRIBE TABLE output format in MySQL 4.1
           [Ken Y Clark]

@@ -26,7 +26,7 @@ WriteMakefile(
     'NAME'		=> $PACKAGE,
     'VERSION_FROM'	=> 'lib/Class/DBI/mysql.pm', 
     'PREREQ_PM'		=> { 
-      'Class::DBI' => 0.91, 
+      'Class::DBI' => 0.94, 
       'Test::More' => 0.45, 
       'DBD::mysql' => 0, 
     },
