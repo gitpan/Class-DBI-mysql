@@ -33,7 +33,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 use constant TRUE       => (1==1);
 use constant FALSE      => !TRUE;
@@ -226,9 +226,9 @@ the title of each film.
 =cut
 
 __PACKAGE__->set_sql('GetInits', <<"");
-SELECT DISTINCT LOWER(LEFT(%s, 1))
+SELECT LOWER(LEFT(%s, 1)) as initial
 FROM %s
-ORDER BY %s
+GROUP BY initial
 
 sub initials {
     my($proto, $key) = @_;
@@ -238,7 +238,7 @@ sub initials {
     _die "$key is not a column" unless ($class->is_column($key));
     my $sth;
     eval {
-        $sth = $class->sql_GetInits($key, $class->table, $key); 
+        $sth = $class->sql_GetInits($key, $class->table);
         $sth->execute();
     };
     if($@) {

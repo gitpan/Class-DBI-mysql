@@ -6,7 +6,7 @@ WriteMakefile(
     'VERSION_FROM'	=> 'mysql.pm', # finds $VERSION
     'PREREQ_PM'		=> { 
                              'Class::DBI' => 0.14, 
-                             'Test::Simple' => 0.01, 
+                             'Test::More' => 0.05, 
                            },
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM => 'mysql.pm', # retrieve abstract from module

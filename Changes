@@ -1,7 +1,12 @@
 Revision history for Class::DBI::mysql.
 
+0.08  2001-07-18
+        - 'initials' method had problem with DISTINCT and ORDER BY in
+           older MySQLs. Changed how it was implemented.
+
 0.07  2001-07-18
         - added 'initials' method
+        - Moved to Test::More
 
 0.06  2001-07-08
         - reversed order of set-up in set_up_table to specify PRIMARY
