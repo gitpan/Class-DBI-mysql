@@ -1,5 +1,8 @@
 Revision history for Class::DBI::mysql.
 
+0.22  2003-10-26
+	- Add 'autoinflate' method.
+
 0.21  2003-10-11
 	- Add create_table and drop_table methods (Michael Schwern)
 	- add INSTALL file (Mark Veltzer)

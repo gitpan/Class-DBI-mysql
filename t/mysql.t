@@ -1,8 +1,13 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Test::More tests => 8;
-use Class::DBI::mysql;
+use Test::More;
+
+my $HAVE_TP = eval { require Time::Piece::MySQL };
+
+plan tests => 11;
+
+use_ok "Class::DBI::mysql";
 
 #-------------------------------------------------------------------------
 # Let the testing begin
@@ -26,10 +31,11 @@ __PACKAGE__->create_table(q{
 	id     MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	Name   VARCHAR(50)        NOT NULL DEFAULT '',
 	val    SMALLINT UNSIGNED  NOT NULL DEFAULT 'A',
-	mydate DATE               NOT NULL DEFAULT '',
+	mydate TIMESTAMP          NOT NULL DEFAULT '',
 	Myvals ENUM('foo', 'bar')
 });
 __PACKAGE__->set_up_table;
+__PACKAGE__->autoinflate(dates => 'Time::Piece') if $HAVE_TP;
 
 END { __PACKAGE__->drop_table }
 
@@ -59,6 +65,12 @@ is @all, 10, "And 10 results from retrieve_all()";
 my $obj = Foo->retrieve_random;
 isa_ok $obj => "Foo", "Retrieve a random row";
 
+SKIP: { 
+	skip "Need Time::Piece::MySQL", 2 unless $HAVE_TP;
+	isa_ok $obj->mydate => "Time::Piece", "mydate is a Time::Piece";
+	is $obj->mydate->ymd, Time::Piece->new->ymd, "From today";
+} 
+
 # Test coltype
 my $type = Foo->column_type('Myvals');
 like $type, qr/^enum/i, "Myvals is an enum";
@@ -67,4 +79,5 @@ my @vals = sort Foo->enum_vals('Myvals');
 is_deeply \@vals, [qw/bar foo/], "Enum vals OK";
 eval { Foo->enum_vals('mydate') };
 ok $@, $@;
+
 
