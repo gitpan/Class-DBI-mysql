@@ -30,16 +30,18 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.19';
+$VERSION = '0.21';
+
+=head1 METHODS
 
 =head2 set_up_table
 
-  __PACKAGE__->set_up_table("table_name");
+	__PACKAGE__->set_up_table("table_name");
 
 Traditionally, to use Class::DBI, you have to set up the columns:
 
-  __PACKAGE__->columns(All => qw/list of columns/);
-  __PACKAGE__->columns(Primary => 'column_name');
+	__PACKAGE__->columns(All => qw/list of columns/);
+	__PACKAGE__->columns(Primary => 'column_name');
 
 Whilst this allows for more flexibility if you're going to arrange your
 columns into a variety of groupings, sometimes you just want to create the
@@ -69,9 +71,52 @@ sub set_up_table {
 	$class->columns(All     => @cols);
 }
 
-=head1 column_type
+=head2 create_table
 
-  my $type = $class->column_type('column_name');
+	$class->create_table(q{
+		name    VARCHAR(40)     NOT NULL PRIMARY KEY,
+		rank    VARCHAR(20)     NOT NULL DEFAULT 'Private',
+		serial  INTEGER         NOT NULL
+	});
+
+This creates the table for the class, with the given schema. If the
+table already exists we do nothing.
+
+A typical use would be:
+
+	Music::CD->table('cd');
+	Music::CD->create_table(q{
+	  cdid   MEDIUMINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	  artist MEDIUMINT UNSIGNED NOT NULL,
+		title  VARCHAR(255),
+		year   YEAR,
+		INDEX (artist),
+		INDEX (title)
+	});
+	Music::CD->set_up_table;
+
+=head2 drop_table
+
+	$class->drop_table;
+
+Drops the table for this class, if it exists. 
+
+=cut
+
+__PACKAGE__->set_sql(
+	create_table => 'CREATE TABLE IF NOT EXISTS __TABLE__ (%s)');
+__PACKAGE__->set_sql(drop_table => 'DROP TABLE IF EXISTS __TABLE__');
+
+sub drop_table { shift->sql_drop_table->execute }
+
+sub create_table {
+	my ($class, $schema) = @_;
+	$class->sql_create_table($schema)->execute;
+}
+
+=head2 column_type
+
+	my $type = $class->column_type('column_name');
 
 This returns the 'type' of this table (VARCHAR(20), BIGINT, etc.)
 
@@ -86,9 +131,9 @@ sub column_type {
 	return $series->[1];
 }
 
-=head1 enum_vals
+=head2 enum_vals
 
-  my @allowed = $class->enum_vals('column_name');
+	my @allowed = $class->enum_vals('column_name');
 
 This returns a list of the allowable values for an ENUM column.
 
@@ -107,7 +152,7 @@ sub enum_vals {
 
 =head2 retrieve_random
 
-  my $film = Film->retrieve_random;
+	my $film = Film->retrieve_random;
 
 This will select a random row from the database, and return you
 the relevant object.
