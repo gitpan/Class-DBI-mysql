@@ -13,12 +13,10 @@ Class::DBI::mysql - Extensions to Class::DBI for MySQL
 
   # Somewhere else ...
 
-  my $howmany = Film->count;
+  my $type = $class->column_type('column_name');
+  my @allowed = $class->enum_vals('column_name');
 
   my $tonights_viewing  = Film->retrieve_random;
-
-  my @results = Film->search_match($key => $value);
-  my @letters = Film->initials('title');
 
 =head1 DESCRIPTION
 
@@ -32,9 +30,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.15';
-
-sub _die { require Carp; Carp::croak(@_); } 
+$VERSION = '0.16';
 
 =head2 set_up_table
 
@@ -67,10 +63,10 @@ sub set_up_table {
     my ($col) = $row->[0] =~ /(\w+)/;
     push @cols, $col;
     next unless ($row->[3] eq "PRI");
-    _die "$table has composite primary key" if $primary;
+    $class->_croak("$table has composite primary key") if $primary;
     $primary = $col;
   }
-  _die "$table has no primary key" unless $primary;
+  $class->_croak("$table has no primary key") unless $primary;
   $class->table($table);
   $class->columns(Primary => $primary);
   $class->columns(All => @cols);
@@ -114,38 +110,6 @@ sub enum_vals {
   return split /,/, $enum;
 }
 
-=head2 count
-
-  $howmany = Film->count;
-
-This will count how many of these there are. You could get the
-same effect by doing a 'select all', but this avoids the overhead
-of having to fetch them all back by using MySQL's highly optimised
-COUNT(*) function instead.
-
-=cut
-
-__PACKAGE__->set_sql('countem', <<"");
-SELECT COUNT(*)
-FROM   %s
-
-sub count {
-    my($proto) = @_;
-    my($class) = ref $proto || $proto;
-    my $data;
-    eval {
-        my $sth = $class->sql_countem($class->table);
-        $sth->execute();
-        $data = $sth->fetchrow_array;
-        $sth->finish;
-    };
-    if ($@) {
-        $class->DBIwarn('countem');
-        return;
-    }
-    return $data;
-}
-
 =head2 retrieve_random
 
   my $film = Film->retrieve_random;
@@ -157,73 +121,15 @@ the relevant object.
 
 =cut
 
-__PACKAGE__->set_sql('GetRandom', <<"");
-SELECT %s
-FROM   %s
-ORDER BY RAND()
-LIMIT 1
+__PACKAGE__->add_constructor(_retrieve_random => '1 ORDER BY RAND() LIMIT 1');
 
-sub retrieve_random {
-    my($proto) = @_;
-    my($class) = ref $proto || $proto;
-    my $data;
-    eval {
-        my $sth = $class->sql_GetRandom(join(', ', $class->columns('Essential')),
-                                    $class->table,
-                                   );
-        $sth->execute();
-        $data = $sth->fetchrow_hashref;
-        $sth->finish;
-    };
-    if ($@) {
-        $class->DBIwarn('GetRandom');
-        return;
-    }
-    return unless defined $data;
-    return $class->construct($data);
+sub retrieve_random { shift->_retrieve_random->first }
+
+sub count {
+	my $class = shift;
+	$class->_carp("use of count() deprecated in favour of count_all()");
+	return $class->count_all(@_);
 }
-
-=head2 search_match
-
-  @results = Film->search_match($key => $value);
-
-This is like search, but using the MySQL 'full text matching' capabilities.
-
-=cut
-
-__PACKAGE__->make_filter(search_match => 'MATCH %s AGAINST (?)');
-
-=head2 initials
-
-  my @letters = Film->initials('title');
-
-This will return a (sorted) list of the initial letters of 
-the title of each film.
-
-=cut
-
-__PACKAGE__->set_sql('GetInits', <<"");
-SELECT LOWER(LEFT(%s, 1)) as initial
-FROM %s
-GROUP BY initial
-
-sub initials {
-    my($proto, $key) = @_;
-    _die "You must fetch the initials of some value" unless $key;
-    my($class) = ref $proto || $proto;
-    $class->_normalize_one(\$key);
-    _die "$key is not a column" unless ($class->has_column($key));
-    my $sth;
-    eval {
-        $sth = $class->sql_GetInits($key, $class->table);
-        $sth->execute();
-    };
-    if($@) {
-        $class->DBIwarn("GetInits");
-        return;
-    }
-    return map $_->[0], @{$sth->fetchall_arrayref};
-} 
 
 =head1 COPYRIGHT
 

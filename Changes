@@ -1,5 +1,10 @@
 Revision history for Class::DBI::mysql.
 
+0.16  2003-06-30
+        - removed search_match() and initials() which should be
+          implemented in any class that needs them.
+        - deprecated count() in favour of Class::DBI->count_all
+
 0.15  2003-05-30
         - added DBD::mysql as a pre-req (thanks to Nicholas Clark)
 
