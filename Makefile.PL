@@ -4,7 +4,7 @@ WriteMakefile(
     'NAME'		=> 'Class::DBI::mysql',
     'VERSION_FROM'	=> 'lib/Class/DBI/mysql.pm', 
     'PREREQ_PM'		=> { 
-                             'Class::DBI' => 0.35, 
+                             'Class::DBI' => 0.36, 
                              'Test::More' => 0.05, 
                            },
     ($] >= 5.005 ?    

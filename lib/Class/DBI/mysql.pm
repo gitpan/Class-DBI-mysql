@@ -15,7 +15,6 @@ Class::DBI::mysql - Extensions to Class::DBI for MySQL
 
   my $howmany = Film->count;
 
-  my @all_films = Film->retrieve_all;
   my $tonights_viewing  = Film->retrieve_random;
 
   my @results = Film->search_match($key => $value);
@@ -33,7 +32,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.12';
+$VERSION = '0.13';
 
 sub _die { require Carp; Carp::croak(@_); } 
 
@@ -65,10 +64,11 @@ sub set_up_table {
   my $ref = $class->db_Main->selectall_arrayref("DESCRIBE $table");
   my (@cols, $primary);
   foreach my $row (@$ref) {
-    push @cols, $row->[0];
+    my ($col) = $row->[0] =~ /(\w+)/;
+    push @cols, $col;
     next unless ($row->[3] eq "PRI");
     _die "$table has composite primary key" if $primary;
-    $primary = $row->[0];
+    $primary = $col;
   }
   _die "$table has no primary key" unless $primary;
   $class->table($table);
@@ -146,39 +146,6 @@ sub count {
     return $data;
 }
 
-=head2 retrieve_all
-
-  @films = Film->retrieve_all;
-
-This will return you a list of objects - one for each of the rows in your
-table. 
-
-=cut
-
-__PACKAGE__->set_sql('RetrieveAllRecs', <<"");
-SELECT %s
-FROM   %s
-
-sub retrieve_all {
-    my($proto) = @_;
-    my($class) = ref $proto || $proto;
-
-    my $sth;
-    eval {
-        $sth = $class->sql_RetrieveAllRecs(join(', ', $class->columns('Essential')),
-                              $class->table);
-        $sth->execute();
-    };
-    if($@) {
-        $class->DBIwarn("Retrieve All");
-        return;
-    }
-
-    return map $class->construct($_), $sth->fetchall_hash;
-} 
-
-=pod
-
 =head2 retrieve_random
 
   my $film = Film->retrieve_random;
@@ -224,30 +191,7 @@ This is like search, but using the MySQL 'full text matching' capabilities.
 
 =cut
 
-__PACKAGE__->set_sql('search_match', <<"");
-SELECT %s
-FROM   %s
-WHERE  MATCH %s AGAINST (?)
-
-sub search_match {
-    my($proto, $key, $value) = @_;
-    my($class) = ref $proto || $proto;
-    $class->normalize_one(\$key);
-    _die "$key is not a column" unless ($class->is_column($key));
-    my $sth;
-    eval {
-        $sth = $class->sql_search_match(join(', ', $class->columns('Essential')),
-                              $class->table,
-                              $key); 
-        $sth->execute($value);
-    };
-        
-    if($@) {
-        $class->DBIwarn("'$key' -> '$value'", 'Search');
-        return;
-    }
-    return map { $class->construct($_) } $sth->fetchall_hash;
-} 
+__PACKAGE__->make_filter(search_match => 'MATCH %s AGAINST (?)');
 
 =head2 initials
 

@@ -1,5 +1,8 @@
 Revision history for Class::DBI::mysql.
 
+0.13  2002-03-09
+        - untaint the column names in set_up_table
+
 0.12  2001-11-09
         - added column_type()
 
