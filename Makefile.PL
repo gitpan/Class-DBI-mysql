@@ -1,14 +1,13 @@
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
+
 WriteMakefile(
     'NAME'		=> 'Class::DBI::mysql',
-    'VERSION_FROM'	=> 'mysql.pm', # finds $VERSION
+    'VERSION_FROM'	=> 'lib/Class/DBI/mysql.pm', 
     'PREREQ_PM'		=> { 
-                             'Class::DBI' => 0.14, 
+                             'Class::DBI' => 0.35, 
                              'Test::More' => 0.05, 
                            },
-    ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM => 'mysql.pm', # retrieve abstract from module
+    ($] >= 5.005 ?    
+      (ABSTRACT_FROM => 'lib/Class/DBI/mysql.pm', 
        AUTHOR     => 'Tony Bowden <tony@tmtm.com>') : ()),
 );

@@ -33,14 +33,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.09';
-
-use constant TRUE       => (1==1);
-use constant FALSE      => !TRUE;
-use constant SUCCESS    => TRUE;
-use constant FAILURE    => FALSE;
-use constant YES        => TRUE;
-use constant NO         => FALSE;
+$VERSION = '0.11';
 
 sub _die { require Carp; Carp::croak(@_); } 
 
@@ -64,6 +57,8 @@ no primary key, or has a composite primary key.
 
 =cut
 
+__PACKAGE__->set_sql('desc', 'DESCRIBE %s');
+
 sub set_up_table {
   my $class = shift;
   my $table = shift;
@@ -79,6 +74,26 @@ sub set_up_table {
   $class->table($table);
   $class->columns(Primary => $primary);
   $class->columns(All => @cols);
+}
+
+=head1 enum_vals
+
+  my @allowed = $class->enum_vals('column_name');
+
+This returns a list of the allowable values for an ENUM column.
+
+=cut
+
+sub enum_vals {
+  my $ref = shift;
+  my $class = ref($ref) || $ref;
+  my $col = shift or die "Need a column for enum vals";
+  my $sth = $class->sql_desc($class->table);
+     $sth->execute;
+  my($series) = grep $_->[0] eq $col, $sth->fetchall;
+  $series->[1] =~ /enum\((.*?)\)/ or die "$col is not an ENUM column";
+  (my $enum = $1) =~ s/'//g;
+  return split /,/, $enum;
 }
 
 =head2 count
@@ -273,40 +288,21 @@ UPDATE %s
 SET    %s
 WHERE  %s = ?
 
-sub commit {
-  my $self = shift;
-  if( my @changed_cols = $self->is_changed ) {
-    my($primary_col) = $self->columns('Primary');
-    my (@cols, @vals, @magic);
-    foreach (@changed_cols) {
-      if (ref($self->{$_}) ne '') {
-        if (overload::Method($self->{$_},q{""})) {
-          $self->{$_} = "$self->{$_}";
-        } else {
-          die "$_ is a reference\n";
-        }
-      }
-      if ($self->{$_} eq "CURDATE()" or $self->{$_} eq "CURTIME()" or
-           $self->{$_} eq "NOW()") {
-        push @cols, "$_ = $self->{$_}";
-        delete $self->{$_}; # so we reload it fresh next time.
-        next;
-      }
-      push @cols, "$_ = ?";
-      push @vals, $self->{$_};
-    }
-    eval {
-      my $set = join( ', ', @cols);
-      my $sth = $self->sql_commitall($self->table, $set, $primary_col);
-      $sth->execute(@vals, $self->id );
-    };
-    if($@) {
-      $self->DBIwarn( $primary_col, 'commitall' );
-      return;
-    }
-    $self->{__Changed}  = {};
+{
+  my @magic = qw/CURDATE() CURTIME() NOW()/;
+  my %magic = map { $_ => 1 } @magic;
+
+  sub _commit_line {
+    my $self = shift;
+    join ", ", map { 
+      $magic{$self->{$_}} ? "$_ = $self->{$_}" : "$_ = ?";
+    } $self->is_changed;
   }
-  return SUCCESS;
+
+  sub _commit_vals {
+    my $self = shift;
+    map { $magic{$self->{$_}} ? () : $self->{$_} } $self->is_changed;
+  }
 }
 
 =head1 COPYRIGHT
@@ -318,7 +314,7 @@ it under the same terms as Perl itself.
 
 =head1 AUTHOR
 
-Tony Bowden, E<lt>tony@tmtm.comE<gt>.
+Tony Bowden, E<lt>mysql@tmtm.comE<gt>.
 
 =head1 SEE ALSO
 

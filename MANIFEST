@@ -1,6 +1,6 @@
 Changes
 MANIFEST
 Makefile.PL
-mysql.pm
+lib/Class/DBI/mysql.pm
 README
 t/mysql.t

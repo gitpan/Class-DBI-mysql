@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Test::More tests => 9;
+use Test::More tests => 11;
 use Class::DBI::mysql;
 
 #-------------------------------------------------------------------------
@@ -37,7 +37,8 @@ eval {
       id mediumint not null auto_increment primary key,
       name varchar(50) not null default '',
       val  smallint unsigned default 'A' not null,
-      mydate date default '' not null
+      mydate date default '' not null,
+      myvals enum('foo', 'bar')
       $text
     )
   };
@@ -103,7 +104,14 @@ if ($version >= $FULLTEXT) {
 #-------------------------------------------------------------------------
 # Test initials
 #-------------------------------------------------------------------------
-unless (Foo->can("initials")) { warn "EEEEEEEEEEEEEEEEEEEEEEEEE: $Foo::VERSION\n"; }
+my @vals = sort Foo->enum_vals('myvals');
+ok eq_array(\@vals, [qw/bar foo/]), "Enum vals OK";
+eval { Foo->enum_vals('mydate') };
+ok $@, $@;
+
+#-------------------------------------------------------------------------
+# Test initials
+#-------------------------------------------------------------------------
 my $inits = join "", Foo->initials("name");
 is($inits, "afimos", "Initials OK");
 
