@@ -13,12 +13,13 @@ Class::DBI::mysql - Extensions to Class::DBI for MySQL
 
   # Somewhere else ...
 
-  $howmany = Film->count;
+  my $howmany = Film->count;
 
-  @all_films = Film->retrieve_all;
-  $tonights_viewing  = Film->retrieve_random;
+  my @all_films = Film->retrieve_all;
+  my $tonights_viewing  = Film->retrieve_random;
 
-  @results = Film->search_match($key => $value);
+  my @results = Film->search_match($key => $value);
+  my @letters = Film->initials('title');
 
 =head1 DESCRIPTION
 
@@ -32,7 +33,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 use constant TRUE       => (1==1);
 use constant FALSE      => !TRUE;
@@ -106,7 +107,6 @@ sub count {
         $sth->finish;
     };
     if ($@) {
-      print "EEEK: $@\n";
         $class->DBIwarn('countem');
         return;
     }
@@ -176,7 +176,6 @@ sub retrieve_random {
         $sth->finish;
     };
     if ($@) {
-      print "EEEK: $@\n";
         $class->DBIwarn('GetRandom');
         return;
     }
@@ -200,11 +199,8 @@ WHERE  MATCH %s AGAINST (?)
 sub search_match {
     my($proto, $key, $value) = @_;
     my($class) = ref $proto || $proto;
-
     $class->normalize_one(\$key);
-
     _die "$key is not a column" unless ($class->is_column($key));
-
     my $sth;
     eval {
         $sth = $class->sql_search_match(join(', ', $class->columns('Essential')),
@@ -217,8 +213,39 @@ sub search_match {
         $class->DBIwarn("'$key' -> '$value'", 'Search');
         return;
     }
-
     return map { $class->construct($_) } $sth->fetchall_hash;
+} 
+
+=head2 initials
+
+  my @letters = Film->initials('title');
+
+This will return a (sorted) list of the initial letters of 
+the title of each film.
+
+=cut
+
+__PACKAGE__->set_sql('GetInits', <<"");
+SELECT DISTINCT LOWER(LEFT(%s, 1))
+FROM %s
+ORDER BY %s
+
+sub initials {
+    my($proto, $key) = @_;
+    _die "You must fetch the initials of some value" unless $key;
+    my($class) = ref $proto || $proto;
+    $class->normalize_one(\$key);
+    _die "$key is not a column" unless ($class->is_column($key));
+    my $sth;
+    eval {
+        $sth = $class->sql_GetInits($key, $class->table, $key); 
+        $sth->execute();
+    };
+    if($@) {
+        $class->DBIwarn("GetInits");
+        return;
+    }
+    return map $_->[0], @{$sth->fetchall_arrayref};
 } 
 
 =head1 CURDATE() / CURTIME() / NOW()

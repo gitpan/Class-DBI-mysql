@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Test::Simple tests => 8;
+use Test::More tests => 9;
 use Class::DBI::mysql;
 
 #-------------------------------------------------------------------------
@@ -36,7 +36,7 @@ eval {
     CREATE TABLE $table (
       id mediumint not null auto_increment primary key,
       name varchar(50) not null default '',
-      val  char(1) default 'A',
+      val  smallint unsigned default 'A' not null,
       mydate date default '' not null
       $text
     )
@@ -64,9 +64,9 @@ __PACKAGE__->set_up_table($table);
 package main;
 
 ok(Foo->can('name'), "We're set up OK");
-ok(Foo->count == 10, "We have 10 rows");
+is(Foo->count, 10, "We have 10 rows");
 my @all = Foo->retrieve_all;
-ok(@all == 10,  "And 10 results from retrieve all");
+is(scalar @all, 10,  "And 10 results from retrieve all");
 
 # Test random. Is there a sensible way to test this is actually
 # random? For now we'll just ensure that we get something back.
@@ -85,7 +85,7 @@ if ($version >= $RANDORDER) {
 my $one = $all[0];
 my $id  = $one->id;
    $one->mydate("0000-00-00") and $one->commit;
-ok($one->mydate eq "0000-00-00", "Date is blank");
+is($one->mydate, "0000-00-00", "Date is blank");
    $one->mydate("CURDATE()") and $one->commit;
 ok($one->mydate ne "0000-00-00" && index($one->mydate,"-") > -1,
      "Date is no longer blank (object):" . $one->mydate);
@@ -100,6 +100,12 @@ if ($version >= $FULLTEXT) {
   ok(1, "Skipping search match (needs 3.23 or higher)");
 }
 
+#-------------------------------------------------------------------------
+# Test initials
+#-------------------------------------------------------------------------
+unless (Foo->can("initials")) { warn "EEEEEEEEEEEEEEEEEEEEEEEEE: $Foo::VERSION\n"; }
+my $inits = join "", Foo->initials("name");
+is($inits, "afimos", "Initials OK");
 
 sub get_db {
   my $msg = shift;
