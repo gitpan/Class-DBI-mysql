@@ -28,8 +28,10 @@ my $table = $tables[-1] || "aaa";
    $table = "z$table";
 
 my $version = get_mysql_version($dbh);
+my $FULLTEXT = 32323;
+my $RANDORDER = 32302;
 eval {
-  my $text = ($version >= 323) ?  " , FULLTEXT(name) " : "";
+  my $text = ($version >= $FULLTEXT) ?  " , FULLTEXT(name) " : "";
   my $create = qq{
     CREATE TABLE $table (
       id mediumint not null auto_increment primary key,
@@ -68,8 +70,12 @@ ok(@all == 10,  "And 10 results from retrieve all");
 
 # Test random. Is there a sensible way to test this is actually
 # random? For now we'll just ensure that we get something back.
-my $obj = Foo->retrieve_random;
-ok($obj && $obj->id, "We can retrieve a random row");
+if ($version >= $RANDORDER) {
+  my $obj = Foo->retrieve_random;
+  ok($obj && $obj->id, "We can retrieve a random row");
+} else {
+  ok(1, "SKIPPED: ORDER BY rand introduced in 3.23.2");
+}
 
 # Test setting with CURDATE(). We can't sensibly validate that the
 # date/time set is accurate, as the clock on the database server
@@ -87,7 +93,7 @@ ok($one->mydate ne "0000-00-00" && index($one->mydate,"-") > -1,
 ok($one->mydate ne "0000-00-00" && index($one->mydate,"-") > -1,
      "Date is no longer blank (database):" . $one->mydate);
 
-if ($version >= 323) {
+if ($version >= $FULLTEXT) {
   my @tony = Foo->search_match(name => "MySQL");
   ok(@tony == 2, "Search match OK");
 } else {
@@ -118,7 +124,7 @@ sub get_mysql_version {
     SHOW VARIABLES
   })};
   my @version = split /\./, $var{version};
-  return sprintf "%01d%02d", $version[0], $version[1];
+  return sprintf "%01d%02d%03d", @version[0..2];
 }
 
 # Clean up after ourselves.

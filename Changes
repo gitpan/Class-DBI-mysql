@@ -1,5 +1,10 @@
 Revision history for Class::DBI::mysql.
 
+0.05  2001-07-07
+        - introduced tighter restrictions on tests for ORDER BY RAND
+          and FULLTEXT searching, which weren't implemented until 3.23.02
+        - added attributes() and search_range() [Thanks to Tatsuhiko Miyagawa]
+
 0.04  2001-06-23
         - first CPAN release
         - renamed to Class::DBI::mysql at the request of Michael Schwern
@@ -10,8 +15,8 @@ Revision history for Class::DBI::mysql.
           the name would fail to give a valid table name.
 
 0.02  2001-06-14
-	- added support for CURDATE() etc 
+	- added support for CURDATE(), NOW()
 
 0.01  2001-05
-	- original version
+	- original version (Class::DBI::MySQL)
 

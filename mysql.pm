@@ -32,7 +32,7 @@ use strict;
 use base 'Class::DBI';
 
 use vars qw($VERSION);
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 use constant TRUE       => (1==1);
 use constant FALSE      => !TRUE;
