@@ -1,5 +1,9 @@
 Revision history for Class::DBI::mysql.
 
+1.00  Sat Sep  3 21:44:31 UTC 2005
+	- Tweak test table SQL some more (RT#12763) for MySQL 5.0+
+	- Remove deprecated count() method
+
 0.23  2004-02-28
 	- Tweak SQL for test table to cope with stricter checks in later MySQL
 	  versions (thanks to CPAN Testers)

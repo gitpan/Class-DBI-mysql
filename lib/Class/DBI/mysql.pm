@@ -1,6 +1,6 @@
 package Class::DBI::mysql;
 
-$VERSION = '0.23';
+$VERSION = '1.00';
 
 =head1 NAME
 
@@ -205,26 +205,30 @@ __PACKAGE__->add_constructor(_retrieve_random => '1 ORDER BY RAND() LIMIT 1');
 
 sub retrieve_random { shift->_retrieve_random->first }
 
-sub count {
-	my $class = shift;
-	$class->_carp("use of count() deprecated in favour of count_all()");
-	return $class->count_all(@_);
-}
-
-=head1 COPYRIGHT
-
-Copyright (C) 2001-2004 Tony Bowden. All rights reserved.
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=head1 AUTHOR
-
-Tony Bowden, E<lt>mysql@tmtm.comE<gt>.
-
 =head1 SEE ALSO
 
 L<Class::DBI>. MySQL (http://www.mysql.com/)
+
+=head1 AUTHOR
+
+Tony Bowden
+
+=head1 BUGS and QUERIES
+
+Please direct all correspondence regarding this module to:
+  bug-Class-DBI-mysql@rt.cpan.org
+
+=head1 COPYRIGHT AND LICENSE
+
+  Copyright (C) 2001-2005 Tony Bowden.
+
+  This program is free software; you can redistribute it and/or modify it under
+  the terms of the GNU General Public License; either version 2 of the License,
+  or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.
 
 =cut
 

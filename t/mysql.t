@@ -5,7 +5,7 @@ use Test::More;
 
 my $HAVE_TP = eval { require Time::Piece::MySQL };
 
-plan tests => 11;
+plan tests => 8;
 
 use_ok "Class::DBI::mysql";
 
@@ -29,8 +29,8 @@ __PACKAGE__->table($tbl);
 __PACKAGE__->drop_table;
 __PACKAGE__->create_table(q{
 	id     MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	Name   VARCHAR(50)        NOT NULL DEFAULT '',
-	val    SMALLINT UNSIGNED  NOT NULL DEFAULT 'A',
+	Name   VARCHAR(50)        NOT NULL,
+	val    SMALLINT UNSIGNED  NOT NULL,
 	mydate TIMESTAMP          NOT NULL,
 	Myvals ENUM('foo', 'bar')
 });
@@ -51,14 +51,6 @@ Foo->create({ Name => $_ }) foreach (
 	('Only MyISAM tables'), ('support collections'),
 	('Function MATCH ... AGAINST()'), ('is used to do a search'),
 	('Full-text search in MySQL'), ( 'implements vector space model'));
-
-{
-	local $SIG{__WARN__} = sub { pass("count deprecated") };
-	is(Foo->count, 10, "We have 10 rows from count()");
-}
-
-my @all = Foo->retrieve_all;
-is @all, 10, "And 10 results from retrieve_all()";
 
 # Test random. Is there a sensible way to test this is actually
 # random? For now we'll just ensure that we get something back.
